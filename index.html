@@ -9,207 +9,111 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Side Navigation -->
-    <nav class="sidebar">
-        <div class="nav-header">
-            <div class="logo">AY</div>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <canvas id="bgCanvas"></canvas>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
         <ul class="nav-menu">
             <li><a href="#home" class="nav-link active">Home</a></li>
             <li><a href="#about" class="nav-link">About</a></li>
-            <li><a href="#skills" class="nav-link">Skills</a></li>
-            <li><a href="#projects" class="nav-link">Projects</a></li>
+            <li><a href="#work" class="nav-link">Work</a></li>
             <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
-        <div class="nav-footer">
-            <div class="social-links">
-                <a href="#" class="social-link">GH</a>
-                <a href="#" class="social-link">LN</a>
-                <a href="#" class="social-link">TW</a>
-            </div>
-        </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main">
         <!-- Hero Section -->
-        <section id="home" class="section hero-section">
-            <div class="hero-bg">
-                <canvas id="heroCanvas"></canvas>
-            </div>
+        <section id="home" class="section hero">
             <div class="hero-content">
-                <div class="hero-text">
-                    <h1 class="hero-name">
-                        <span class="name-part" data-text="ASIF">ASIF</span>
-                        <span class="name-part" data-text="YOUSAF">YOUSAF</span>
-                    </h1>
-                    <p class="hero-subtitle">Frontend & App Developer</p>
-                    <p class="hero-description">Creating digital experiences that blend functionality with aesthetic beauty</p>
-                    <button class="cta-button">Explore My Work</button>
-                </div>
-            </div>
-            <div class="scroll-indicator">
-                <div class="scroll-line"></div>
-                <span>Scroll</span>
+                <h1 class="hero-name">ASIF YOUSAF</h1>
+                <p class="hero-role">Frontend & App Developer</p>
+                <p class="hero-description">Creating digital experiences with precision and creativity</p>
             </div>
         </section>
 
         <!-- About Section -->
-        <section id="about" class="section about-section">
+        <section id="about" class="section about">
             <div class="container">
-                <h2 class="section-title">About Me</h2>
+                <h2 class="section-title">About</h2>
                 <div class="about-content">
-                    <div class="about-text">
-                        <p>I'm a passionate frontend and app developer with a keen eye for design and user experience. I love creating digital solutions that not only look beautiful but also provide exceptional functionality.</p>
-                        <p>With expertise in modern web technologies and mobile development, I bring ideas to life through clean code and innovative design approaches.</p>
-                    </div>
-                    <div class="about-stats">
-                        <div class="stat">
-                            <span class="stat-number">2+</span>
-                            <span class="stat-label">Years Experience</span>
+                    <p>I'm a passionate frontend and app developer with expertise in modern web technologies and mobile development. I focus on creating clean, functional, and beautiful digital experiences.</p>
+                    
+                    <div class="skills-grid">
+                        <div class="skill-item">
+                            <h3>HTML</h3>
+                            <p>Over a year of experience with structure, tags, and attributes</p>
                         </div>
-                        <div class="stat">
-                            <span class="stat-number">15+</span>
-                            <span class="stat-label">Projects Completed</span>
+                        <div class="skill-item">
+                            <h3>CSS</h3>
+                            <p>Strong interest in styling and enhancing visuals for engaging UI/UX</p>
                         </div>
-                        <div class="stat">
-                            <span class="stat-number">5</span>
-                            <span class="stat-label">Technologies</span>
+                        <div class="skill-item">
+                            <h3>JavaScript</h3>
+                            <p>Recently started learning with enthusiasm to expand programming skills</p>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Skills Section -->
-        <section id="skills" class="section skills-section">
-            <div class="container">
-                <h2 class="section-title">My Expertise</h2>
-                <div class="skills-grid">
-                    <div class="skill-card" data-skill="html">
-                        <div class="skill-icon">🌐</div>
-                        <h3>HTML</h3>
-                        <p>Over a year of experience with HTML structure, tags, and attributes</p>
-                        <div class="skill-level">
-                            <div class="skill-progress" data-progress="95"></div>
+                        <div class="skill-item">
+                            <h3>Kotlin</h3>
+                            <p>Developing Android apps with Kotlin in Android Studio</p>
                         </div>
-                    </div>
-                    <div class="skill-card" data-skill="css">
-                        <div class="skill-icon">🎨</div>
-                        <h3>CSS</h3>
-                        <p>Strong interest in styling and enhancing visuals for engaging UI/UX</p>
-                        <div class="skill-level">
-                            <div class="skill-progress" data-progress="90"></div>
-                        </div>
-                    </div>
-                    <div class="skill-card" data-skill="js">
-                        <div class="skill-icon">⚡</div>
-                        <h3>JavaScript</h3>
-                        <p>Recently started learning with enthusiasm to expand programming skills</p>
-                        <div class="skill-level">
-                            <div class="skill-progress" data-progress="75"></div>
-                        </div>
-                    </div>
-                    <div class="skill-card" data-skill="kotlin">
-                        <div class="skill-icon">📱</div>
-                        <h3>Android/Kotlin</h3>
-                        <p>Developing Android apps with Kotlin in Android Studio</p>
-                        <div class="skill-level">
-                            <div class="skill-progress" data-progress="85"></div>
-                        </div>
-                    </div>
-                    <div class="skill-card" data-skill="python">
-                        <div class="skill-icon">🐍</div>
-                        <h3>Python</h3>
-                        <p>2 years of experience developing various projects</p>
-                        <div class="skill-level">
-                            <div class="skill-progress" data-progress="88"></div>
+                        <div class="skill-item">
+                            <h3>Python</h3>
+                            <p>2 years of experience developing various projects</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Projects Section -->
-        <section id="projects" class="section projects-section">
+        <!-- Work Section -->
+        <section id="work" class="section work">
             <div class="container">
-                <h2 class="section-title">Featured Projects</h2>
+                <h2 class="section-title">Selected Work</h2>
                 <div class="projects-grid">
                     <div class="project-card" data-project="masat">
                         <div class="project-image">
-                            <img src="/placeholder.svg" alt="Masat Al Nahar">
-                            <div class="project-overlay">
-                                <button class="project-btn">View Details</button>
-                            </div>
+                            <div class="project-placeholder">Masat Al Nahar</div>
                         </div>
                         <div class="project-info">
                             <h3>Masat Al Nahar</h3>
-                            <p>Modern restaurant website with online ordering system</p>
-                            <div class="project-tags">
-                                <span>HTML5</span>
-                                <span>CSS3</span>
-                                <span>JavaScript</span>
-                                <span>Figma</span>
-                            </div>
+                            <p>Restaurant website with online ordering</p>
+                            <span class="project-year">2024</span>
                         </div>
                     </div>
+                    
                     <div class="project-card" data-project="cybertronic">
                         <div class="project-image">
-                            <img src="/placeholder.svg" alt="Cybertronic Website">
-                            <div class="project-overlay">
-                                <button class="project-btn">View Details</button>
-                            </div>
+                            <div class="project-placeholder">Cybertronic</div>
                         </div>
                         <div class="project-info">
                             <h3>Cybertronic Website</h3>
                             <p>Full-stack e-commerce platform</p>
-                            <div class="project-tags">
-                                <span>React</span>
-                                <span>Node.js</span>
-                                <span>MongoDB</span>
-                                <span>Express</span>
-                            </div>
+                            <span class="project-year">2024</span>
                         </div>
                     </div>
+                    
                     <div class="project-card" data-project="time">
                         <div class="project-image">
-                            <img src="/placeholder.svg" alt="TIME Magazine Clone">
-                            <div class="project-overlay">
-                                <button class="project-btn">View Details</button>
-                            </div>
+                            <div class="project-placeholder">TIME Clone</div>
                         </div>
                         <div class="project-info">
                             <h3>TIME Magazine Clone</h3>
-                            <p>Responsive magazine website with dynamic content</p>
-                            <div class="project-tags">
-                                <span>HTML5</span>
-                                <span>CSS3</span>
-                                <span>JavaScript</span>
-                                <span>REST API</span>
-                            </div>
+                            <p>Responsive magazine website</p>
+                            <span class="project-year">2024</span>
                         </div>
                     </div>
+                    
                     <div class="project-card" data-project="fixmyride">
                         <div class="project-image">
-                            <img src="/placeholder.svg" alt="Fix My Ride">
-                            <div class="project-overlay">
-                                <button class="project-btn">View Details</button>
-                            </div>
+                            <div class="project-placeholder">Fix My Ride</div>
                         </div>
                         <div class="project-info">
                             <h3>Fix My Ride</h3>
-                            <p>Mobile app for car service booking</p>
-                            <div class="project-tags">
-                                <span>Kotlin</span>
-                                <span>Android SDK</span>
-                                <span>Firebase</span>
-                                <span>Material UI</span>
-                            </div>
+                            <p>Car service booking mobile app</p>
+                            <span class="project-year">2024</span>
                         </div>
                     </div>
                 </div>
@@ -217,31 +121,22 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="section contact-section">
+        <section id="contact" class="section contact">
             <div class="container">
-                <h2 class="section-title">Let's Connect</h2>
+                <h2 class="section-title">Get in Touch</h2>
                 <div class="contact-content">
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <span class="contact-icon">📧</span>
-                            <span>asif@example.com</span>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-icon">📱</span>
-                            <span>+92 XXX XXXXXXX</span>
-                        </div>
-                        <div class="contact-item">
-                            <span class="contact-icon">📍</span>
-                            <span>Pakistan</span>
-                        </div>
+                    <p>Available for freelance work and collaborations</p>
+                    <div class="contact-links">
+                        <a href="mailto:asif@example.com" class="contact-link">asif@example.com</a>
+                        <a href="#" class="contact-link">LinkedIn</a>
+                        <a href="#" class="contact-link">GitHub</a>
                     </div>
-                    <button class="download-cv">Download CV</button>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Project Detail Modal -->
+    <!-- Project Modal -->
     <div id="projectModal" class="modal">
         <div class="modal-content">
             <button class="modal-close">&times;</button>
