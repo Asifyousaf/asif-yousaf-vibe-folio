@@ -1,3 +1,18 @@
+// Loading Screen
+window.addEventListener('load', () => {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const mainContent = document.getElementById('mainContent');
+    
+    setTimeout(() => {
+        loadingScreen.classList.add('fade-out');
+        mainContent.classList.remove('hidden');
+        
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+        }, 800);
+    }, 3000); // 3 second loading time
+});
+
 // Navigation functionality
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
@@ -41,13 +56,14 @@ window.addEventListener('scroll', () => {
     });
 });
 
-// Background Canvas Animation
+// Enhanced Background Canvas Animation
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 
 let animationId;
 let particles = [];
 let mouse = { x: 0, y: 0 };
+let mouseRadius = 100;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -58,15 +74,35 @@ class Particle {
     constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.3;
-        this.size = Math.random() * 1 + 0.5;
-        this.opacity = Math.random() * 0.3 + 0.1;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2 + 1;
+        this.opacity = Math.random() * 0.5 + 0.1;
+        this.originalSize = this.size;
     }
 
     update() {
         this.x += this.vx;
         this.y += this.vy;
+
+        // Mouse interaction
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < mouseRadius) {
+            const force = (mouseRadius - distance) / mouseRadius;
+            const directionX = dx / distance;
+            const directionY = dy / distance;
+            
+            this.x -= directionX * force * 2;
+            this.y -= directionY * force * 2;
+            this.size = this.originalSize * (1 + force);
+            this.opacity = Math.min(0.8, this.opacity + force * 0.3);
+        } else {
+            this.size += (this.originalSize - this.size) * 0.1;
+            this.opacity += (this.originalSize * 0.3 - this.opacity) * 0.1;
+        }
 
         // Boundary check
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
@@ -87,7 +123,7 @@ class Particle {
 
 function createParticles() {
     particles = [];
-    const particleCount = Math.min(50, Math.floor((canvas.width * canvas.height) / 15000));
+    const particleCount = Math.min(80, Math.floor((canvas.width * canvas.height) / 12000));
     
     for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle());
@@ -101,11 +137,11 @@ function connectParticles() {
             const dy = particles[i].y - particles[j].y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < 150) {
+            if (distance < 120) {
                 ctx.beginPath();
                 ctx.moveTo(particles[i].x, particles[i].y);
                 ctx.lineTo(particles[j].x, particles[j].y);
-                ctx.strokeStyle = `rgba(255, 255, 255, ${0.05 * (1 - distance / 150)})`;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance / 120)})`;
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
             }
@@ -125,6 +161,12 @@ function animate() {
     animationId = requestAnimationFrame(animate);
 }
 
+// Mouse tracking
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
 // Initialize canvas
 resizeCanvas();
 createParticles();
@@ -134,6 +176,20 @@ animate();
 window.addEventListener('resize', () => {
     resizeCanvas();
     createParticles();
+});
+
+// Hero name letter animation
+document.addEventListener('DOMContentLoaded', () => {
+    const letters = document.querySelectorAll('.letter');
+    letters.forEach((letter, index) => {
+        letter.style.animationDelay = `${index * 0.1}s`;
+        letter.addEventListener('mouseenter', () => {
+            letter.style.transform = 'translateY(-10px) rotate(5deg)';
+        });
+        letter.addEventListener('mouseleave', () => {
+            letter.style.transform = 'translateY(0) rotate(0deg)';
+        });
+    });
 });
 
 // Project modal functionality
