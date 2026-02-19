@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          listing_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          listing_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          listing_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           contact_email: string | null
@@ -52,6 +76,48 @@ export type Database = {
           id?: string
           plate_number?: string
           plate_style?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mobile_numbers: {
+        Row: {
+          carrier: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          phone_number: string
+          price: number | null
+          status: Database["public"]["Enums"]["listing_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carrier: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          phone_number: string
+          price?: number | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carrier?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          phone_number?: string
           price?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           updated_at?: string

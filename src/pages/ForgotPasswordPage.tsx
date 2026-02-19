@@ -15,13 +15,13 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) {
       toast.error(error.message);
     } else {
       setSent(true);
-      toast.success('Reset link sent! Check your email.');
+      toast.success(t('resetLinkSent'));
     }
     setLoading(false);
   };
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
         </div>
         {sent ? (
           <div className="bg-card border border-border rounded-2xl p-8 text-center shadow-card">
-            <p className="text-foreground mb-4">Check your email for the reset link.</p>
+            <p className="text-foreground mb-4">{t('checkEmailReset')}</p>
             <Link to="/login" className="text-primary font-bold hover:underline">{t('backToLogin')}</Link>
           </div>
         ) : (
