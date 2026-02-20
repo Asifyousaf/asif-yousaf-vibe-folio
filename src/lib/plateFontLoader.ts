@@ -54,12 +54,12 @@ const PLATE_FONTS: FontDef[] = [
   { name: 'PlateFont_ajman_bike',        url: '/fonts/DIN-1451.ttf', weight: 'bold' },
 
   // ── Rough Motion ──────────────────────────────────────────────────────────
-  { name: 'PlateFont_dubai',             url: '/fonts/RoughMotion.otf', weight: 'bold' },
-  { name: 'PlateFont_dubai_bike',        url: '/fonts/RoughMotion.otf', weight: 'bold' },
-  { name: 'PlateFont_dubai_classic',     url: '/fonts/RoughMotion.otf', weight: 'bold' },
-  { name: 'PlateFont_rak_bike',          url: '/fonts/RoughMotion.otf', weight: 'bold' },
-  { name: 'PlateFont_umm_al_quwain_bike',url: '/fonts/RoughMotion.otf', weight: 'bold' },
-  { name: 'PlateFont_fujairah_bike',     url: '/fonts/RoughMotion.otf', weight: 'bold' },
+  { name: 'PlateFont_dubai',             url: '/fonts/Rough Motion.otf', weight: 'bold' },
+  { name: 'PlateFont_dubai_bike',        url: '/fonts/Rough Motion.otf', weight: 'bold' },
+  { name: 'PlateFont_dubai_classic',     url: '/fonts/Rough Motion.otf', weight: 'bold' },
+  { name: 'PlateFont_rak_bike',          url: '/fonts/Rough Motion.otf', weight: 'bold' },
+  { name: 'PlateFont_umm_al_quwain_bike',url: '/fonts/Rough Motion.otf', weight: 'bold' },
+  { name: 'PlateFont_fujairah_bike',     url: '/fonts/Rough Motion.otf', weight: 'bold' },
 
   // ── Arabic ────────────────────────────────────────────────────────────────
   { name: 'ArabicFont_abudhabi',         url: '/fonts/Amiri-Bold.ttf',   weight: 'bold' },
