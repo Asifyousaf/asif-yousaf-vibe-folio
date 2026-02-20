@@ -62,7 +62,7 @@ const CONFIGS: Record<string, EmirateConfig> = {
     hasCode: true,
     fontHeightRatio: 0.20,
     letterSpacingRatio: 0.015,
-    fontFile: '/fonts/Rough Motion.otf',
+    fontFile: '/fonts/RoughMotion.otf',
     verticalCenter: true,
     components: [
       {
@@ -158,7 +158,7 @@ CONFIGS['abudhabi_bike'] = {
 CONFIGS['dubai_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: true,
-  fontFile: '/fonts/Rough Motion.otf',
+  fontFile: '/fonts/RoughMotion.otf',
   letterSpacingRatio: 0.001,
   components: [
     { type: 'code', xRatio: 0.877, yRatio: 0.44, align: 'center', emboss: true, fontSizeRatio: 0.20 },
@@ -195,7 +195,7 @@ CONFIGS['umm_al_quwain_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: true,
   letterSpacingRatio: 0.01,
-  fontFile: '/fonts/Rough Motion.otf',
+  fontFile: '/fonts/RoughMotion.otf',
   components: [
     { type: 'code', xRatio: 0.171, yRatio: 0.87, align: 'center', emboss: true, fontSizeRatio: 0.18 },
     { type: 'number', xRatio: 0.62, yRatio: 0.87, align: 'center', emboss: true, fontSizeRatio: 0.18 },
@@ -206,7 +206,7 @@ CONFIGS['umm_al_quwain_bike'] = {
 CONFIGS['rak_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: true,
-  fontFile: '/fonts/Rough Motion.otf',
+  fontFile: '/fonts/RoughMotion.otf',
   letterSpacingRatio: 0.01,
   components: [
     { type: 'code', xRatio: 0.12, yRatio: 0.43, align: 'center', emboss: true, fontSizeRatio: 0.18 },
@@ -218,7 +218,7 @@ CONFIGS['rak_bike'] = {
 CONFIGS['fujairah_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: false,
-  fontFile: '/fonts/Rough Motion.otf',
+  fontFile: '/fonts/RoughMotion.otf',
   letterSpacingRatio: 0.01,
   components: [
     { type: 'number', xRatio: 0.5, yRatio: 0.89, align: 'center', emboss: true, fontSizeRatio: 0.20 },
@@ -246,7 +246,7 @@ CONFIGS['dubai_classic'] = {
   hasCode: false,
   fontHeightRatio: 0.20,
   letterSpacingRatio: -0.0001,
-  fontFile: '/fonts/Rough Motion.otf',
+  fontFile: '/fonts/RoughMotion.otf',
   verticalCenter: true,
   components: [
 
@@ -369,7 +369,11 @@ export async function generatePlate({
   }
 
   // Load all plate fonts before rendering (centralized, fail-safe)
-  await loadPlateFonts();
+  try {
+    await loadPlateFonts();
+  } catch (e) {
+    console.warn('[PlateGenerator] Font loading had errors, will use fallbacks:', e);
+  }
 
   // Derive the specific font name for this emirate+style config.
   // MUST match the exact registered name in plateFontLoader.ts.
@@ -399,15 +403,15 @@ export async function generatePlate({
 
     // Use Arabic font for arabic_number components
     const isArabic = comp.type === 'arabic_number' && arabicFontNameId;
-    const activeFontName = isArabic ? arabicFontNameId : fontNameId;
+    let activeFontName = isArabic ? arabicFontNameId : fontNameId;
 
-    // Verify the resolved font is actually available — fail hard, no silent fallback
+    // Graceful fallback — if the resolved font isn't available, fall back instead of crashing
     if (!document.fonts.check(`${targetWeight} 12px "${activeFontName}"`)) {
-      throw new Error(
-        `[PlateGenerator] Font "${activeFontName}" not available in document.fonts. ` +
-        `configKey="${configKey}", emId="${emId}". ` +
-        `Ensure loadPlateFonts() was fully awaited before calling generatePlate().`
+      console.warn(
+        `[PlateGenerator] Font "${activeFontName}" not available, falling back to "${FONT_FALLBACK}". ` +
+        `configKey="${configKey}", emId="${emId}".`
       );
+      activeFontName = FONT_FALLBACK;
     }
 
     const compFontSize = comp.fontSizeRatio ? W * comp.fontSizeRatio : globalFontHeight;
@@ -432,9 +436,9 @@ export async function generatePlate({
 
     let cursorX = startX;
 
-    // Scale offsets relative to font size (for 4K clarity)
-    const shadowOff = Math.max(3, Math.round(compFontSize * 0.018));
-    const strokeW = Math.max(2, Math.round(compFontSize * 0.012));
+    // Scale offsets relative to canvas height (for consistent 4K clarity)
+    const shadowOff = Math.max(3, Math.round(H * 0.005));
+    const strokeW = Math.max(2, Math.round(H * 0.003));
 
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
