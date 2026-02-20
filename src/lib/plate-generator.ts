@@ -62,7 +62,7 @@ const CONFIGS: Record<string, EmirateConfig> = {
     hasCode: true,
     fontHeightRatio: 0.20,
     letterSpacingRatio: 0.015,
-    fontFile: '/fonts/RoughMotion.otf',
+  fontFile: '/fonts/Rough Motion.otf',
     verticalCenter: true,
     components: [
       {
@@ -158,7 +158,7 @@ CONFIGS['abudhabi_bike'] = {
 CONFIGS['dubai_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: true,
-  fontFile: '/fonts/RoughMotion.otf',
+  fontFile: '/fonts/Rough Motion.otf',
   letterSpacingRatio: 0.001,
   components: [
     { type: 'code', xRatio: 0.877, yRatio: 0.44, align: 'center', emboss: true, fontSizeRatio: 0.20 },
@@ -195,7 +195,7 @@ CONFIGS['umm_al_quwain_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: true,
   letterSpacingRatio: 0.01,
-  fontFile: '/fonts/RoughMotion.otf',
+  fontFile: '/fonts/Rough Motion.otf',
   components: [
     { type: 'code', xRatio: 0.171, yRatio: 0.87, align: 'center', emboss: true, fontSizeRatio: 0.18 },
     { type: 'number', xRatio: 0.62, yRatio: 0.87, align: 'center', emboss: true, fontSizeRatio: 0.18 },
@@ -206,7 +206,7 @@ CONFIGS['umm_al_quwain_bike'] = {
 CONFIGS['rak_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: true,
-  fontFile: '/fonts/RoughMotion.otf',
+  fontFile: '/fonts/Rough Motion.otf',
   letterSpacingRatio: 0.01,
   components: [
     { type: 'code', xRatio: 0.12, yRatio: 0.43, align: 'center', emboss: true, fontSizeRatio: 0.18 },
@@ -218,7 +218,7 @@ CONFIGS['rak_bike'] = {
 CONFIGS['fujairah_bike'] = {
   ...BIKE_SQUARE_DEFAULTS,
   hasCode: false,
-  fontFile: '/fonts/RoughMotion.otf',
+  fontFile: '/fonts/Rough Motion.otf',
   letterSpacingRatio: 0.01,
   components: [
     { type: 'number', xRatio: 0.5, yRatio: 0.89, align: 'center', emboss: true, fontSizeRatio: 0.20 },
@@ -246,7 +246,7 @@ CONFIGS['dubai_classic'] = {
   hasCode: false,
   fontHeightRatio: 0.20,
   letterSpacingRatio: -0.0001,
-  fontFile: '/fonts/RoughMotion.otf',
+  fontFile: '/fonts/Rough Motion.otf',
   verticalCenter: true,
   components: [
 
