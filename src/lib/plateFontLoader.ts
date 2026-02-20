@@ -80,8 +80,13 @@ export function loadPlateFonts(): Promise<void> {
       const encodedUrl = def.url.replace(/ /g, '%20');
       const weight = def.weight ?? 'bold';
 
-      // Skip if this exact font name is already registered
-      if (document.fonts.check(`${weight} 12px "${def.name}"`)) return;
+      // Never rely on document.fonts.check() — it can return true for system
+      // fallback fonts, causing the real custom font to be skipped entirely.
+      // Instead, check if we already added a FontFace with this exact name.
+      const alreadyRegistered = Array.from(document.fonts).some(
+        (f) => f.family === def.name || f.family === `"${def.name}"`
+      );
+      if (alreadyRegistered) return;
 
       try {
         const face = new FontFace(def.name, `url("${encodedUrl}")`, { weight });
