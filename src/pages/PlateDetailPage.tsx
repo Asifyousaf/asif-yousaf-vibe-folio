@@ -1,10 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Phone, MessageCircle, Shield, ArrowLeft, Share2, Car, X as XIcon } from 'lucide-react';
+import { Phone, MessageCircle, Shield, ArrowLeft, Share2, Car, X as XIcon, Heart } from 'lucide-react';
 import ListWithUsBanner from '@/components/ListWithUsBanner';
 import { usePlateImage } from '@/hooks/usePlateGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const EMIRATE_KEY_MAP: Record<string, string> = {
     'Abu Dhabi': 'abudhabi',
@@ -21,6 +23,7 @@ interface ListingDetail {
     plate_number: string;
     emirate: string;
     plate_style: string | null;
+    plate_image_url: string | null;
     price: number | null;
     description: string | null;
     contact_phone: string | null;
@@ -44,6 +47,8 @@ export default function PlateDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [showCarPreview, setShowCarPreview] = useState(false);
     const { t } = useLanguage();
+    const { user } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
 
     useEffect(() => {
         if (!plateId) return;
@@ -92,7 +97,9 @@ export default function PlateDetailPage() {
     const emirateKey = listing ? (EMIRATE_KEY_MAP[listing.emirate] || listing.emirate.toLowerCase().replace(/\s+/g, '_')) : '';
     const emirateDisplay = listing?.emirate || '';
 
-    const dataUrl = usePlateImage(emirateKey, code, number, plateStyle);
+    // Use CDN image if available, fallback to canvas generation for pre-migration listings
+    const canvasFallback = usePlateImage(listing?.plate_image_url ? '' : emirateKey, listing?.plate_image_url ? '' : code, listing?.plate_image_url ? '' : number, plateStyle);
+    const dataUrl = listing?.plate_image_url || canvasFallback;
 
     // Contact info — prefer listing contact_phone, fall back to seller phone_number
     const phone = listing?.contact_phone || seller?.phone_number || '';
@@ -113,6 +120,43 @@ export default function PlateDetailPage() {
             });
         } else {
             navigator.clipboard.writeText(window.location.href);
+        }
+    };
+
+    // Check if this listing is already favorited
+    useEffect(() => {
+        if (!user || !plateId) return;
+        (async () => {
+            const { data } = await supabase
+                .from('favorites')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('listing_type', 'plate')
+                .eq('listing_id', plateId)
+                .maybeSingle();
+            if (data) setIsFavorite(true);
+        })();
+    }, [user, plateId]);
+
+    const toggleFavorite = async () => {
+        if (!user) { toast.error('Please log in to save favorites'); return; }
+        if (!plateId) return;
+
+        if (isFavorite) {
+            await supabase.from('favorites').delete()
+                .eq('user_id', user.id)
+                .eq('listing_type', 'plate')
+                .eq('listing_id', plateId);
+            setIsFavorite(false);
+            toast.success('Removed from favorites');
+        } else {
+            await supabase.from('favorites').insert({
+                user_id: user.id,
+                listing_type: 'plate',
+                listing_id: plateId,
+            });
+            setIsFavorite(true);
+            toast.success('Added to favorites');
         }
     };
 
@@ -287,6 +331,12 @@ export default function PlateDetailPage() {
                                 className="mt-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 <Share2 className="h-4 w-4" /> {t('shareThisPlate')}
+                            </button>
+                            <button
+                                onClick={toggleFavorite}
+                                className="mt-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} /> {isFavorite ? 'Saved' : 'Save'}
                             </button>
                         </div>
 

@@ -180,17 +180,18 @@ export default function Navbar() {
 
             {/* Right Side */}
             <div className="flex items-center gap-2">
-              {/* Dashboard Icon (logged in only) */}
+              {/* Dashboard Icon (logged in, desktop only) */}
               {user && (
                 <Link
                   to="/dashboard"
-                  className="flex h-10 w-10 rounded-full bg-gray-100 border border-gray-200 items-center justify-center text-gray-500 hover:text-foreground hover:bg-gray-200 transition-all duration-300"
+                  className="hidden lg:flex h-10 w-10 rounded-full bg-gray-100 border border-gray-200 items-center justify-center text-gray-500 hover:text-foreground hover:bg-gray-200 transition-all duration-300"
                   title="Dashboard"
                 >
                   <LayoutDashboard className="h-4 w-4" />
                 </Link>
               )}
 
+              {/* Language toggle — shown on all screen sizes */}
               <button
                 onClick={toggleLang}
                 className="h-10 w-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-foreground hover:bg-gray-200 transition-all duration-300"
@@ -374,16 +375,6 @@ export default function Navbar() {
               {t('contactUs')}
             </Link>
 
-            {/* List Your Number CTA */}
-            <Link
-              to={user ? '/dashboard' : '/login'}
-              onClick={closeMenu}
-              className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 transition-all shadow-sm my-2"
-            >
-              <PlusCircle className="h-5 w-5" />
-              List Your Number
-            </Link>
-
             {user && (
               <Link
                 to="/dashboard"
@@ -393,6 +384,16 @@ export default function Navbar() {
                 {t('dashboard')}
               </Link>
             )}
+
+            {/* List Your Number CTA */}
+            <Link
+              to={user ? '/dashboard' : '/login'}
+              onClick={closeMenu}
+              className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 transition-all shadow-sm my-2"
+            >
+              <PlusCircle className="h-5 w-5" />
+              List Your Number
+            </Link>
           </div>
 
           {/* Bottom Actions */}

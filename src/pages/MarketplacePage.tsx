@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Search, ChevronLeft, ChevronRight, Loader2, X, Sparkles, Settings } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Loader2, X, Sparkles, Settings, ChevronDown } from 'lucide-react';
 import PlateCard from '@/components/PlateCard';
 
 const EMIRATES = ['Abu Dhabi', 'Dubai', 'Sharjah', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
@@ -32,12 +32,85 @@ interface ListingWithSeller {
   plate_number: string;
   emirate: string;
   plate_style: string | null;
+  plate_image_url: string | null;
   price: number | null;
   description: string | null;
   status: string;
   created_at: string;
   user_id: string;
   contact_phone: string | null;
+}
+
+/** Searchable combobox for plate codes */
+function CodeCombobox({
+  codes, value, onChange, className = '',
+}: { codes: string[]; value: string; onChange: (v: string) => void; className?: string }) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const filtered = query.trim()
+    ? codes.filter(c => c.toLowerCase().includes(query.toLowerCase()))
+    : codes;
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const select = (code: string) => { onChange(code); setQuery(''); setOpen(false); };
+  const clear = () => { onChange(''); setQuery(''); setOpen(false); };
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <div
+        className={`flex items-center gap-1.5 bg-surface border rounded-xl px-3 py-2.5 text-sm cursor-pointer transition-all focus-within:ring-2 focus-within:ring-primary/30 ${open ? 'border-primary/50' : 'border-border'}`}
+        onClick={() => setOpen(o => !o)}
+      >
+        <Search className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+        <input
+          value={open ? query : (value || '')}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onClick={e => { e.stopPropagation(); setOpen(true); }}
+          placeholder={value || 'All Codes'}
+          className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground min-w-0 w-20"
+        />
+        {value ? (
+          <button onClick={e => { e.stopPropagation(); clear(); }} className="text-muted-foreground hover:text-foreground">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        ) : (
+          <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+        )}
+      </div>
+
+      {open && filtered.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+          <div className="max-h-52 overflow-y-auto">
+            <button
+              className="w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:bg-surface transition-colors"
+              onClick={() => clear()}
+            >
+              All Codes
+            </button>
+            {filtered.map(code => (
+              <button
+                key={code}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-surface ${value === code ? 'bg-primary/10 text-primary font-bold' : 'text-foreground'}`}
+                onClick={() => select(code)}
+              >
+                {code}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function MarketplacePage() {
@@ -49,12 +122,23 @@ export default function MarketplacePage() {
   const [emirateFilter, setEmirateFilter] = useState('');
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('');
   const [digitCountFilter, setDigitCountFilter] = useState('');
+  const [codeFilter, setCodeFilter] = useState('');
+  const [availableCodes, setAvailableCodes] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
+  // Lock body scroll when mobile filter panel is open
+  useEffect(() => {
+    if (filterPanelOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [filterPanelOpen]);
   useEffect(() => {
     const paramEmirate = searchParams.get('emirate');
     if (paramEmirate) {
@@ -66,6 +150,22 @@ export default function MarketplacePage() {
       setVehicleTypeFilter(paramVehicleType);
     }
   }, [searchParams]);
+
+  // Fetch available plate codes for filter dropdown
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('listings')
+        .select('plate_style')
+        .in('status', ['active', 'sold']);
+      if (data) {
+        const codes = [...new Set(
+          data.map(d => d.plate_style).filter((s): s is string => !!s && s !== 'bike' && s !== 'classic')
+        )].sort();
+        setAvailableCodes(codes);
+      }
+    })();
+  }, []);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -81,6 +181,7 @@ export default function MarketplacePage() {
     if (vehicleTypeFilter === 'bike') query = query.eq('plate_style', 'bike');
     else if (vehicleTypeFilter === 'classic') query = query.eq('plate_style', 'classic');
     else if (vehicleTypeFilter === 'car') query = query.not('plate_style', 'in', '("bike","classic")');
+    if (codeFilter) query = query.eq('plate_style', codeFilter);
     if (minPrice) query = query.gte('price', Number(minPrice));
     if (maxPrice) query = query.lte('price', Number(maxPrice));
 
@@ -88,7 +189,6 @@ export default function MarketplacePage() {
     if (error) { console.error(error); setLoading(false); return; }
 
     let result = (data || []) as unknown as ListingWithSeller[];
-    // Client-side digit count filter
     if (digitCountFilter) {
       result = result.filter(l => {
         const numPart = l.plate_number.split(' ').pop() || l.plate_number;
@@ -98,26 +198,25 @@ export default function MarketplacePage() {
     setListings(result);
     setTotal(digitCountFilter ? result.length : (count || 0));
     setLoading(false);
-  }, [search, emirateFilter, vehicleTypeFilter, digitCountFilter, minPrice, maxPrice, page]);
+  }, [search, emirateFilter, vehicleTypeFilter, digitCountFilter, codeFilter, minPrice, maxPrice, page]);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const resetFilters = () => {
     setSearch(''); setEmirateFilter(''); setVehicleTypeFilter('');
-    setDigitCountFilter(''); setMinPrice(''); setMaxPrice(''); setPage(0);
+    setDigitCountFilter(''); setCodeFilter(''); setMinPrice(''); setMaxPrice(''); setPage(0);
   };
-  const hasFilters = search || emirateFilter || vehicleTypeFilter || digitCountFilter || minPrice || maxPrice;
-  const activeFilterCount = [emirateFilter, vehicleTypeFilter, digitCountFilter, minPrice || maxPrice].filter(Boolean).length;
+  const hasFilters = search || emirateFilter || vehicleTypeFilter || digitCountFilter || codeFilter || minPrice || maxPrice;
+  const activeFilterCount = [emirateFilter, vehicleTypeFilter, digitCountFilter, codeFilter, minPrice || maxPrice].filter(Boolean).length;
 
   const Chip = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
-      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-        active
-          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-          : 'bg-card text-foreground border-border hover:border-primary/50 hover:bg-surface'
-      }`}
+      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${active
+        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+        : 'bg-card text-foreground border-border hover:border-primary/50 hover:bg-surface'
+        }`}
     >
       {label}
     </button>
@@ -209,6 +308,14 @@ export default function MarketplacePage() {
               <option value="">{t('allEmirates')}</option>
               {EMIRATES.map(em => <option key={em} value={em}>{em}</option>)}
             </select>
+            {availableCodes.length > 0 && (
+              <CodeCombobox
+                codes={availableCodes}
+                value={codeFilter}
+                onChange={v => { setCodeFilter(v); setPage(0); }}
+                className="min-w-[150px]"
+              />
+            )}
             <div className="flex gap-2 items-center">
               <input type="number" value={minPrice} onChange={e => { setMinPrice(e.target.value); setPage(0); }}
                 placeholder="Min AED"
@@ -249,83 +356,109 @@ export default function MarketplacePage() {
           )}
         </div>
 
-        {/* ── MOBILE SLIDE-UP FILTER PANEL ── */}
-        {filterPanelOpen && (
-          <>
-            <div className="sm:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setFilterPanelOpen(false)} />
-            <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl max-h-[85vh] overflow-y-auto animate-slide-up">
-              <div className="sticky top-0 bg-card p-4 border-b border-border flex items-center justify-between">
-                <h3 className="font-bold text-lg text-foreground">Filters</h3>
-                <button onClick={() => setFilterPanelOpen(false)} className="p-2">
-                  <X className="h-5 w-5 text-foreground" />
-                </button>
-              </div>
-              <div className="p-4 space-y-5">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
-                    className="w-full bg-surface border border-border rounded-xl ps-10 pe-4 py-3 text-sm text-foreground"
-                    placeholder="Search plate number..." />
-                </div>
+        {/* ── MOBILE FULL-SCREEN FILTER OVERLAY ── */}
+        {/* Backdrop */}
+        <div
+          className={`sm:hidden fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${filterPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setFilterPanelOpen(false)}
+        />
+        {/* Panel — full screen overlay */}
+        <div
+          className={`sm:hidden fixed inset-0 z-[101] bg-background transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col ${filterPanelOpen ? 'translate-y-0' : 'translate-y-full'}`}
+        >
+          {/* Header */}
+          <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-border bg-card">
+            <div>
+              <h3 className="font-display font-bold text-lg text-foreground">Filters</h3>
+              <p className="text-xs text-muted-foreground">{total} plates found</p>
+            </div>
+            <button
+              onClick={() => setFilterPanelOpen(false)}
+              className="h-11 w-11 rounded-full bg-surface border-2 border-border flex items-center justify-center text-foreground hover:bg-gray-200 transition-all active:scale-95"
+              aria-label="Close filters"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
-                {/* Emirate */}
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Emirate</label>
-                  <div className="flex flex-wrap gap-2">
-                    <Chip label="All" active={emirateFilter === ''} onClick={() => { setEmirateFilter(''); setPage(0); }} />
-                    {EMIRATES.map(em => (
-                      <Chip key={em} label={em} active={emirateFilter === em} onClick={() => { setEmirateFilter(emirateFilter === em ? '' : em); setPage(0); }} />
-                    ))}
-                  </div>
-                </div>
+          {/* Scrollable filter content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-5">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
+                className="w-full bg-surface border border-border rounded-xl ps-10 pe-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="Search plate number..." />
+            </div>
 
-                {/* Vehicle Type */}
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Vehicle Type</label>
-                  <div className="flex flex-wrap gap-2">
-                    {PLATE_TYPE_CHIPS.map(c => (
-                      <Chip key={c.value} label={c.label} active={vehicleTypeFilter === c.value}
-                        onClick={() => { setVehicleTypeFilter(c.value); setPage(0); }} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Digit Count */}
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Number of Digits</label>
-                  <div className="flex flex-wrap gap-2">
-                    {DIGIT_COUNT_CHIPS.map(c => (
-                      <Chip key={c.value} label={c.label || 'Any'} active={digitCountFilter === c.value}
-                        onClick={() => { setDigitCountFilter(c.value); setPage(0); }} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase mb-2 block">Price Range (AED)</label>
-                  <div className="flex gap-2">
-                    <input type="number" value={minPrice} onChange={e => { setMinPrice(e.target.value); setPage(0); }}
-                      placeholder="Min" className="flex-1 bg-surface border border-border rounded-xl px-3 py-2 text-sm text-foreground" />
-                    <input type="number" value={maxPrice} onChange={e => { setMaxPrice(e.target.value); setPage(0); }}
-                      placeholder="Max" className="flex-1 bg-surface border border-border rounded-xl px-3 py-2 text-sm text-foreground" />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2">
-                  <button onClick={resetFilters} className="flex-1 py-3 rounded-xl border border-border text-sm font-medium text-foreground">
-                    Clear All
-                  </button>
-                  <button onClick={() => setFilterPanelOpen(false)} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-                    Show {total} Results
-                  </button>
-                </div>
+            {/* Emirate */}
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 block">Emirate</label>
+              <div className="flex flex-wrap gap-2">
+                <Chip label="All" active={emirateFilter === ''} onClick={() => { setEmirateFilter(''); setPage(0); }} />
+                {EMIRATES.map(em => (
+                  <Chip key={em} label={em} active={emirateFilter === em} onClick={() => { setEmirateFilter(emirateFilter === em ? '' : em); setPage(0); }} />
+                ))}
               </div>
             </div>
-          </>
-        )}
+
+            {/* Vehicle Type */}
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 block">Vehicle Type</label>
+              <div className="flex flex-wrap gap-2">
+                {PLATE_TYPE_CHIPS.map(c => (
+                  <Chip key={c.value} label={c.label} active={vehicleTypeFilter === c.value}
+                    onClick={() => { setVehicleTypeFilter(c.value); setPage(0); }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Digit Count */}
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 block">Number of Digits</label>
+              <div className="flex flex-wrap gap-2">
+                {DIGIT_COUNT_CHIPS.map(c => (
+                  <Chip key={c.value} label={c.label || 'Any'} active={digitCountFilter === c.value}
+                    onClick={() => { setDigitCountFilter(c.value); setPage(0); }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range */}
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 block">Price Range (AED)</label>
+              <div className="flex gap-2">
+                <input type="number" value={minPrice} onChange={e => { setMinPrice(e.target.value); setPage(0); }}
+                  placeholder="Min" className="flex-1 bg-surface border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <input type="number" value={maxPrice} onChange={e => { setMaxPrice(e.target.value); setPage(0); }}
+                  placeholder="Max" className="flex-1 bg-surface border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+            </div>
+
+            {/* Plate Code */}
+            {availableCodes.length > 0 && (
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 block">Plate Code</label>
+                <CodeCombobox
+                  codes={availableCodes}
+                  value={codeFilter}
+                  onChange={v => { setCodeFilter(v); setPage(0); }}
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Sticky footer buttons */}
+          <div className="flex-shrink-0 px-5 py-4 border-t border-border bg-card flex gap-2">
+            <button onClick={resetFilters} className="flex-1 py-3 rounded-xl border border-border text-sm font-bold text-foreground hover:bg-surface transition-colors">
+              Clear All
+            </button>
+            <button onClick={() => setFilterPanelOpen(false)} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm">
+              Show {total} Results
+            </button>
+          </div>
+        </div>
 
         {/* ── LISTINGS GRID ── */}
         {loading ? (
@@ -357,6 +490,7 @@ export default function MarketplacePage() {
                   status={listing.status}
                   plateStyle={resolvedPlateStyle}
                   vehicleType={rawStyle === 'bike' ? 'bike' : rawStyle === 'classic' ? 'classic' : 'car'}
+                  plateImageUrl={listing.plate_image_url}
                 />
               );
             })}

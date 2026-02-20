@@ -3,6 +3,8 @@
    Canvas-based rendering for Flat Plates
 */
 
+import { loadPlateFonts } from './plateFontLoader';
+
 const OUTPUT_WIDTH = 3840;
 
 const FONT_PRIMARY = 'PlateFont';
@@ -366,23 +368,24 @@ export async function generatePlate({
     baselineY = H * (config.baselineRatio || 0.5);
   }
 
-  // Load Fonts
+  // Load all plate fonts before rendering (centralized, fail-safe)
+  await loadPlateFonts();
+
+  // Derive the specific font name for this emirate+style config.
+  // MUST match the exact registered name in plateFontLoader.ts.
+  // Priority: PlateFont_<configKey> → PlateFont_<emId> → PlateFont (default)
   const targetWeight = config.fontWeight || 'bold';
-  const fontFileURL = config.fontFile || FONT_FILE;
-  const fontNameId = config.fontFile ? `PlateFont_${emId}` : FONT_PRIMARY;
+  const fontNameForKey   = `PlateFont_${configKey}`; // e.g. PlateFont_abudhabi_bike
+  const fontNameForEmid  = `PlateFont_${emId}`;      // e.g. PlateFont_abudhabi
+  const fontNameId = config.fontFile
+    ? (document.fonts.check(`${targetWeight} 12px "${fontNameForKey}"`)
+        ? fontNameForKey
+        : fontNameForEmid)
+    : FONT_PRIMARY;
 
-  // Load Font
-  const font = new FontFace(fontNameId, `url("${fontFileURL}")`, { weight: targetWeight });
-  await font.load();
-  document.fonts.add(font);
-
-  // Load Arabic font if needed
   let arabicFontNameId = '';
   if (config.arabicFontFile) {
     arabicFontNameId = `ArabicFont_${emId}`;
-    const arabicFont = new FontFace(arabicFontNameId, `url("${config.arabicFontFile}")`, { weight: 'bold' });
-    await arabicFont.load();
-    document.fonts.add(arabicFont);
   }
 
   ctx.textBaseline = 'alphabetic';
@@ -398,6 +401,15 @@ export async function generatePlate({
     const isArabic = comp.type === 'arabic_number' && arabicFontNameId;
     const activeFontName = isArabic ? arabicFontNameId : fontNameId;
 
+    // Verify the resolved font is actually available — fail hard, no silent fallback
+    if (!document.fonts.check(`${targetWeight} 12px "${activeFontName}"`)) {
+      throw new Error(
+        `[PlateGenerator] Font "${activeFontName}" not available in document.fonts. ` +
+        `configKey="${configKey}", emId="${emId}". ` +
+        `Ensure loadPlateFonts() was fully awaited before calling generatePlate().`
+      );
+    }
+
     const compFontSize = comp.fontSizeRatio ? W * comp.fontSizeRatio : globalFontHeight;
     const compSpacing = comp.letterSpacingRatio ? W * comp.letterSpacingRatio : W * config.letterSpacingRatio;
 
@@ -409,7 +421,8 @@ export async function generatePlate({
       compY = baselineY + H * comp.baselineOffsetRatio;
     }
 
-    ctx.font = `${targetWeight} ${Math.round(compFontSize)}px "${activeFontName}", sans-serif`;
+    // NO fallback font — only the custom plate font is allowed
+    ctx.font = `${targetWeight} ${Math.round(compFontSize)}px "${activeFontName}"`;
 
     // Calculate alignment
     const width = ctx.measureText(text).width + (text.length - 1) * compSpacing;
