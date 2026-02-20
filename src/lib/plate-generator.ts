@@ -379,12 +379,9 @@ export async function generatePlate({
   // MUST match the exact registered name in plateFontLoader.ts.
   // Priority: PlateFont_<configKey> → PlateFont_<emId> → PlateFont (default)
   const targetWeight = config.fontWeight || 'bold';
-  const fontNameForKey   = `PlateFont_${configKey}`; // e.g. PlateFont_abudhabi_bike
-  const fontNameForEmid  = `PlateFont_${emId}`;      // e.g. PlateFont_abudhabi
+  // Use the most specific registered font name: PlateFont_<configKey> first, then PlateFont_<emId>, then default
   const fontNameId = config.fontFile
-    ? (document.fonts.check(`${targetWeight} 12px "${fontNameForKey}"`)
-        ? fontNameForKey
-        : fontNameForEmid)
+    ? `PlateFont_${configKey}`
     : FONT_PRIMARY;
 
   let arabicFontNameId = '';
@@ -403,16 +400,7 @@ export async function generatePlate({
 
     // Use Arabic font for arabic_number components
     const isArabic = comp.type === 'arabic_number' && arabicFontNameId;
-    let activeFontName = isArabic ? arabicFontNameId : fontNameId;
-
-    // Graceful fallback — if the resolved font isn't available, fall back instead of crashing
-    if (!document.fonts.check(`${targetWeight} 12px "${activeFontName}"`)) {
-      console.warn(
-        `[PlateGenerator] Font "${activeFontName}" not available, falling back to "${FONT_FALLBACK}". ` +
-        `configKey="${configKey}", emId="${emId}".`
-      );
-      activeFontName = FONT_FALLBACK;
-    }
+    const activeFontName = isArabic ? arabicFontNameId : fontNameId;
 
     const compFontSize = comp.fontSizeRatio ? W * comp.fontSizeRatio : globalFontHeight;
     const compSpacing = comp.letterSpacingRatio ? W * comp.letterSpacingRatio : W * config.letterSpacingRatio;
